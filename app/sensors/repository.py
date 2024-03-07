@@ -61,33 +61,18 @@ def record_data(db: Session, redis: RedisClient, mongo_db: MongoDBClient, sensor
     except json.JSONDecodeError as e:
         raise HTTPException(status_code=400, detail=f"Error parsing data: {e}")
 
-    try:
-        # Convert MongoDB document to dictionary, excluding the ObjectId field
-        document_dict = {key: value for key, value in document.items() if key != '_id' and key !=
-                         'manufacturer' and key != 'model' and key != 'serie_number' and key != 'firmware_version'}
-    except Exception as e:
-        raise HTTPException(
-            status_code=400, detail=f"Error parsing MongoDB data: {e}")
-
-    # Update the document with the new data
-    document_dict.update(data_dict)
-
-    # Update the document with the db
-    document_dict.update(
-        {"name": db_sensor.name, "joined_at": db_sensor.joined_at})
-
-    return schemas.Sensor(id=document_dict['id'], 
-                          name=document_dict['name'], 
-                          latitude=document_dict['latitude'], 
-                          longitude=document_dict['longitude'], 
-                          joined_at=document_dict['joined_at'].strftime("%m/%d/%Y, %H:%M:%S"), 
-                          last_seen=document_dict['last_seen'], 
-                          type=document_dict['type'], 
-                          mac_address=document_dict['mac_address'], 
-                          battery_level=document_dict['battery_level'], 
-                          temperature=document_dict['temperature'], 
-                          humidity=document_dict['humidity'], 
-                          velocity=document_dict['velocity'])
+    return schemas.Sensor(id=document['id'], 
+                          name=db_sensor.name, 
+                          latitude=document['latitude'], 
+                          longitude=document['longitude'], 
+                          joined_at=db_sensor.joined_at.strftime("%m/%d/%Y, %H:%M:%S"), 
+                          last_seen=data_dict['last_seen'], 
+                          type=document['type'], 
+                          mac_address=document['mac_address'], 
+                          battery_level=data_dict['battery_level'], 
+                          temperature=data_dict['temperature'], 
+                          humidity=data_dict['humidity'], 
+                          velocity=data_dict['velocity'])
 
 
 def get_data(redis: Session, sensor_id: int, data: schemas.SensorData) -> schemas.Sensor:
