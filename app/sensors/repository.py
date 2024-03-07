@@ -41,7 +41,7 @@ def create_sensor(db: Session, sensor: schemas.SensorCreate, mongodb: MongoDBCli
     return db_sensor
 
 
-def record_data(db: Session, redis: RedisClient, mongo_db: MongoDBClient, sensor_id: int, data: schemas.SensorData) -> models.Sensor:
+def record_data(db: Session, redis: RedisClient, mongo_db: MongoDBClient, sensor_id: int, data: schemas.SensorData) -> schemas.Sensor:
     db_sensor = get_sensor(db, sensor_id)
     if db_sensor is None:
         raise HTTPException(
@@ -75,9 +75,37 @@ def record_data(db: Session, redis: RedisClient, mongo_db: MongoDBClient, sensor
                           velocity=data_dict['velocity'])
 
 
-def get_data(redis: Session, sensor_id: int, data: schemas.SensorData) -> schemas.Sensor:
-    db_sensordata = data
-    return db_sensordata
+def get_data(db: Session, redis: RedisClient, mongo_db: MongoDBClient, sensor_id: int) -> schemas.Sensor:
+    
+    db_sensor = get_sensor(db, sensor_id)
+    if db_sensor is None:
+        raise HTTPException(
+            status_code=404, detail=f"Sensor with id: {sensor_id} are not in db")
+
+    dyn_data = redis.get(sensor_id)
+    document = mongo_db.get_data(sensor_id)
+
+    if document is None:
+        raise HTTPException(
+            status_code=404, detail=f"Sensor with id: {sensor_id} are not in mongo")
+
+    try:
+        data_dict = json.loads(dyn_data)
+    except json.JSONDecodeError as e:
+        raise HTTPException(status_code=400, detail=f"Error parsing data: {e}")
+
+    return schemas.Sensor(id=document['id'], 
+                          name=db_sensor.name, 
+                          latitude=document['latitude'], 
+                          longitude=document['longitude'], 
+                          joined_at=db_sensor.joined_at.strftime("%m/%d/%Y, %H:%M:%S"), 
+                          last_seen=data_dict['last_seen'], 
+                          type=document['type'], 
+                          mac_address=document['mac_address'], 
+                          battery_level=data_dict['battery_level'], 
+                          temperature=data_dict['temperature'], 
+                          humidity=data_dict['humidity'], 
+                          velocity=data_dict['velocity'])
 
 
 def delete_sensor(db: Session, sensor_id: int):
