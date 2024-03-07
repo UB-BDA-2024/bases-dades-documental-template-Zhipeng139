@@ -10,9 +10,9 @@ class Sensor(BaseModel):
     type: str
     mac_address: str
     battery_level: float
-    temperature: float
-    humidity: float
-    velocity: float
+    temperature: float | None
+    humidity: float | None
+    velocity: float | None
     
     
     class Config:
@@ -30,8 +30,8 @@ class SensorCreate(BaseModel):
     firmware_version: str
 
 class SensorData(BaseModel):
-    velocity: float
-    temperature: float
-    humidity: float
+    velocity: float | None
+    temperature: float | None
+    humidity: float | None
     battery_level: float
     last_seen: str

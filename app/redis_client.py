@@ -28,4 +28,3 @@ class RedisClient:
     def clearAll(self):
         for key in self._client.keys("*"):
             self._client.delete(key)
-    

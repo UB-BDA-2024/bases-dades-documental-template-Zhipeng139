@@ -25,4 +25,18 @@ class MongoDBClient:
     def clearDb(self,database):
         self.client.drop_database(database)
 
+    def insert_data(self, document):
+        if self.collection is None:
+            self.getDatabase("sensors")
+            self.getCollection("sensors_collection")
+        
+        return self.collection.insert_one(document)
+    
+    def get_data(self, sensor_id):
+        if self.collection is None:
+            self.getDatabase("sensors")
+            self.getCollection("sensors_collection")
+        
+        return self.collection.find_one({"id": sensor_id})
+
 

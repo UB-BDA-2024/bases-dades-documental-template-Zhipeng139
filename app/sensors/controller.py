@@ -58,8 +58,8 @@ def create_sensor(sensor: schemas.SensorCreate, db: Session = Depends(get_db), m
     db_sensor = repository.get_sensor_by_name(db, sensor.name)
     if db_sensor:
         raise HTTPException(status_code=400, detail="Sensor with same name already registered")
-    raise HTTPException(status_code=404, detail="Not implemented")
-#    return repository.create_sensor(db=db, sensor=sensor)
+    #raise HTTPException(status_code=404, detail="Not implemented")
+    return repository.create_sensor(db, sensor, mongodb_client)
 
 # 🙋🏽‍♀️ Add here the route to get a sensor by id
 @router.get("/{sensor_id}")
@@ -81,9 +81,8 @@ def delete_sensor(sensor_id: int, db: Session = Depends(get_db), mongodb_client:
 
 # 🙋🏽‍♀️ Add here the route to update a sensor
 @router.post("/{sensor_id}/data")
-def record_data(sensor_id: int, data: schemas.SensorData,db: Session = Depends(get_db) ,redis_client: RedisClient = Depends(get_redis_client)):
-    raise HTTPException(status_code=404, detail="Not implemented")
-    #return repository.record_data(redis=redis_client, sensor_id=sensor_id, data=data)
+def record_data(sensor_id: int, data: schemas.SensorData,db: Session = Depends(get_db) ,redis_client: RedisClient = Depends(get_redis_client), mongodb_client: MongoDBClient = Depends(get_mongodb_client)):
+    return repository.record_data(db=db, redis=redis_client, mongo_db=mongodb_client, sensor_id=sensor_id, data=data)
 
 # 🙋🏽‍♀️ Add here the route to get data from a sensor
 @router.get("/{sensor_id}/data")
